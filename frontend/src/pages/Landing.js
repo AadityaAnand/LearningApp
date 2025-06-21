@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Code, 
   BookOpen, 
@@ -20,6 +21,12 @@ import {
 } from 'lucide-react';
 
 const Landing = () => {
+  const { user, logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout();
+  };
+
   const features = [
     {
       icon: <Code className="h-8 w-8" />,
@@ -164,18 +171,37 @@ const Landing = () => {
               <a href="#features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
               <a href="#pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
               <a href="#testimonials" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Reviews</a>
-              <Link
-                to="/login"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Get Started
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -198,13 +224,23 @@ const Landing = () => {
               and peer reviews. Perfect for busy professionals who want to level up their skills efficiently.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link
-                to="/register"
-                className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
-              >
-                Start Learning Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                >
+                  Start Learning Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              )}
               <button className="inline-flex items-center px-8 py-4 border border-gray-300 text-lg font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
                 <Play className="mr-2 h-5 w-5" />
                 Watch Demo

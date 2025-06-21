@@ -11,7 +11,8 @@ import {
   Menu, 
   X,
   Bell,
-  Search
+  Search,
+  LayoutDashboard
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -20,8 +21,9 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Lessons', href: '/lessons', icon: BookOpen },
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Courses', href: '/courses', icon: BookOpen },
     { name: 'Progress', href: '/progress', icon: Trophy },
     { name: 'Profile', href: '/profile', icon: User },
   ];
