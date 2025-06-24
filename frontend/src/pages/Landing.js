@@ -69,9 +69,41 @@ const Header = () => {
 };
 
 const HeroSection = () => {
+  const [resume, setResume] = React.useState(null);
+  const [role, setRole] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+    if (!resume || !role) {
+      setError("Please upload your resume and enter your desired role.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("resume", resume);
+      formData.append("role", role);
+      const res = await fetch("/api/roadmap/generate", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to generate roadmap. Please try again.");
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center text-center px-4 bg-white dark:bg-gray-900">
-      <div className="relative z-10">
+      <div className="relative z-10 w-full max-w-xl mx-auto">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -86,6 +118,44 @@ const HeroSection = () => {
         <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
           CareerCraft AI creates a personalized learning path from your resume and career goals, guiding you to success with AI-powered micro-lessons. All for free, forever.
         </p>
+        <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg p-6 flex flex-col gap-4 items-center mb-6">
+          <div className="w-full flex flex-col gap-2">
+            <label htmlFor="resume" className="font-semibold text-gray-700 dark:text-gray-200 text-left">Upload Resume (PDF/DOCX)</label>
+            <input
+              type="file"
+              id="resume"
+              accept=".pdf,.doc,.docx"
+              onChange={e => setResume(e.target.files[0])}
+              className="file-input file-input-bordered w-full"
+              required
+            />
+          </div>
+          <div className="w-full flex flex-col gap-2">
+            <label htmlFor="role" className="font-semibold text-gray-700 dark:text-gray-200 text-left">Desired Role</label>
+            <input
+              type="text"
+              id="role"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              placeholder="e.g. Product Manager, Data Scientist"
+              className="input input-bordered w-full"
+              required
+            />
+          </div>
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {success && (
+            <div className="text-green-600 text-sm font-semibold">
+              Roadmap generated! <span className="block">Please <Link to="/register" className="underline text-primary-600 dark:text-primary-400">sign up</Link> or <Link to="/login" className="underline text-primary-600 dark:text-primary-400">log in</Link> to view your personalized plan.</span>
+            </div>
+          )}
+          <button
+            type="submit"
+            className="btn-primary text-lg px-8 py-3 mt-2 flex items-center justify-center"
+            disabled={loading}
+          >
+            {loading ? 'Generating...' : 'Get My Roadmap'}
+          </button>
+        </form>
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

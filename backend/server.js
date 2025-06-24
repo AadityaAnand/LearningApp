@@ -7,6 +7,7 @@ require('dotenv').config();
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const multer = require('multer');
 
 // Models
 const User = require('./models/User');
@@ -523,3 +524,34 @@ app.listen(PORT, () => {
 });
 
 module.exports = app; 
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+// --- ROADMAP GENERATION ENDPOINT ---
+app.post('/api/roadmap/generate', upload.single('resume'), async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!req.file || !role) {
+      return res.status(400).json({ success: false, message: 'Resume and desired role are required.' });
+    }
+    // In a real implementation, you would parse the resume and send it to the LLM here.
+    // For now, return a mock roadmap.
+    const mockRoadmap = {
+      title: `Roadmap to become a ${role}`,
+      skills: [
+        'Skill 1: Foundations',
+        'Skill 2: Core Concepts',
+        'Skill 3: Advanced Topics'
+      ],
+      courses: [
+        { title: 'Course 1', description: 'Introductory course', materials: ['Video', 'Article'] },
+        { title: 'Course 2', description: 'Intermediate course', materials: ['Book', 'Project'] },
+        { title: 'Course 3', description: 'Advanced course', materials: ['Research Paper', 'Case Study'] }
+      ]
+    };
+    res.json({ success: true, roadmap: mockRoadmap });
+  } catch (error) {
+    console.error('Roadmap generation error:', error);
+    res.status(500).json({ success: false, message: 'Server error during roadmap generation.' });
+  }
+}); 
