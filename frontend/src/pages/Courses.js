@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, Clock, Star, BookOpen } from 'lucide-react';
-import axios from 'axios';
+import axios from '../api/axios';
 import toast from 'react-hot-toast';
 
 const Courses = () => {
@@ -46,13 +46,13 @@ const Courses = () => {
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case 'beginner':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400';
       case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400';
       case 'advanced':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -64,17 +64,17 @@ const Courses = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow p-6">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
                 </div>
               ))}
             </div>
@@ -85,27 +85,27 @@ const Courses = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Explore Courses</h1>
-          <p className="text-gray-600">Discover bite-sized lessons to enhance your development skills</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Explore Courses</h1>
+          <p className="text-gray-600 dark:text-gray-300">Discover bite-sized lessons to enhance your development skills</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5" />
                 <input
                   type="text"
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
             </div>
@@ -115,7 +115,7 @@ const Courses = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">All Categories</option>
                 {categories.map(category => (
@@ -127,7 +127,7 @@ const Courses = () => {
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">All Levels</option>
                 {difficulties.map(difficulty => (
@@ -143,26 +143,26 @@ const Courses = () => {
         {/* Courses Grid */}
         {courses.length === 0 ? (
           <div className="text-center py-12">
-            <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-            <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+            <BookOpen className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No courses found</h3>
+            <p className="text-gray-600 dark:text-gray-300">Try adjusting your search or filter criteria</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
               <Link
                 key={course._id}
-                to={`/courses/${course.slug}`}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+                to={`/courses/${course._id}`}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden transform hover:-translate-y-1"
               >
                 <div className="p-6">
                   {/* Course Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                         {course.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3">
                         {course.description}
                       </p>
                     </div>
@@ -176,7 +176,7 @@ const Courses = () => {
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getDifficultyColor(course.difficulty)}`}>
                       {course.difficulty}
                     </span>
-                    <div className="flex items-center text-sm text-gray-500">
+                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                       <Clock className="h-4 w-4 mr-1" />
                       {formatDuration(course.estimatedDuration)}
                     </div>
@@ -184,23 +184,23 @@ const Courses = () => {
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {course.tags.slice(0, 3).map((tag) => (
+                    {course.tags?.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
+                        className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded"
                       >
                         {tag}
                       </span>
                     ))}
-                    {course.tags.length > 3 && (
-                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                    {course.tags?.length > 3 && (
+                      <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
                         +{course.tags.length - 3}
                       </span>
                     )}
                   </div>
 
                   {/* Lessons Count */}
-                  <div className="flex items-center text-sm text-gray-500">
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     <BookOpen className="h-4 w-4 mr-1" />
                     {course.lessons?.length || 0} lessons
                   </div>
@@ -217,7 +217,7 @@ const Courses = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 Previous
               </button>
@@ -226,10 +226,10 @@ const Courses = () => {
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
                     currentPage === i + 1
                       ? 'bg-blue-600 text-white'
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                      : 'text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   {i + 1}
@@ -239,7 +239,7 @@ const Courses = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 Next
               </button>

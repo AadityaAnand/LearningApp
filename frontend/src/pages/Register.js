@@ -1,220 +1,212 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, User, Target, Upload } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const Register = () => {
-  const { register: signup, loading } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    careerGoal: '',
+    resume: null
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  const [resumeFile, setResumeFile] = useState(null);
 
-  const onSubmit = async (data) => {
-    if (!resumeFile) {
-      toast.error('Please upload your resume.');
-      return;
-    }
-    
-    // Here you would typically use FormData to send the file and other data
-    // to the backend. For now, we'll simulate the data structure.
-    const registrationData = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      password: data.password,
-      careerGoal: data.careerGoal,
-      // In a real implementation, you'd handle the resume upload and
-      // maybe send back a file ID or URL.
-      resume: resumeFile.name 
-    };
-
-    const { success } = await signup(registrationData);
-    if (success) {
-      navigate('/dashboard');
-    }
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value
+    });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setResumeFile(file);
-    } else {
-      toast.error("Please upload a PDF file.");
-      setResumeFile(null);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('password', formData.password);
+      formDataToSend.append('careerGoal', formData.careerGoal);
+      if (formData.resume) {
+        formDataToSend.append('resume', formData.resume);
+      }
+
+      await register(formDataToSend);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to register');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create your personalized learning plan
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Tell us your goals, and we'll generate a custom micro-learning schedule for you.
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-1/2">
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  First Name
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+            Create your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            Or{' '}
+            <Link
+              to="/login"
+              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+            >
+              sign in to your existing account
+            </Link>
+          </p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  First name
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    {...register('firstName', { required: 'First name is required' })}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
-                </div>
-                {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>}
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="First name"
+                />
               </div>
-              <div className="w-1/2">
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  Last Name
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Last name
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    {...register('lastName', { required: 'Last name is required' })}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
-                </div>
-                {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>}
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Last name"
+                />
               </div>
             </div>
-
+            
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  {...register('email', { 
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address"
-                    }
-                  })}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                />
-              </div>
-              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Enter your email"
+              />
             </div>
-
+            
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="careerGoal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Career Goal
+              </label>
+              <textarea
+                id="careerGoal"
+                name="careerGoal"
+                rows="3"
+                required
+                value={formData.careerGoal}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Describe your career goals (e.g., 'I want to become a Senior Software Engineer')"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="resume" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Resume (Optional)
+              </label>
+              <input
+                id="resume"
+                name="resume"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleChange}
+                className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/20 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/30"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register('password', { 
-                    required: 'Password is required',
-                    minLength: { value: 8, message: 'Password must be at least 8 characters' }
-                  })}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                />
-              </div>
-              {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Create a password"
+              />
             </div>
-
+            
             <div>
-              <label htmlFor="resume" className="block text-sm font-medium text-gray-700">
-                Upload Resume (PDF)
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Confirm Password
               </label>
-              <div className="mt-1 flex items-center space-x-2">
-                <label htmlFor="resume" className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                  <Upload className="h-5 w-5 inline-block mr-2" />
-                  <span>Choose File</span>
-                  <input id="resume" name="resume" type="file" className="sr-only" onChange={handleFileChange} accept=".pdf" />
-                </label>
-                {resumeFile && <span className="text-sm text-gray-500">{resumeFile.name}</span>}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="careerGoal" className="block text-sm font-medium text-gray-700">
-                What is your career goal?
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                 <div className="absolute inset-y-0 left-0 pl-3 pt-3 flex items-start pointer-events-none">
-                  <Target className="h-5 w-5 text-gray-400" />
-                </div>
-                <textarea
-                  id="careerGoal"
-                  name="careerGoal"
-                  rows={4}
-                  {...register('careerGoal', { required: 'Please tell us your career goal.' })}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  placeholder="e.g., 'I am a junior frontend developer with experience in React, and I want to become a full-stack engineer specializing in the MERN stack within the next 6 months.'"
-                />
-              </div>
-              {errors.careerGoal && <p className="mt-2 text-sm text-red-600">{errors.careerGoal.message}</p>}
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-primary-300"
-              >
-                {loading ? 'Generating your plan...' : 'Create My Learning Plan'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Already have an account?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/login"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Sign in
-              </Link>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm your password"
+              />
             </div>
           </div>
-        </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              {loading ? 'Creating account...' : 'Create account'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

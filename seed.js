@@ -1,5 +1,8 @@
 const { post } = require('axios');
 
+// Set environment to development
+process.env.NODE_ENV = 'development';
+
 async function seedDatabase() {
   try {
     const response = await post('http://localhost:5001/api/courses/seed');

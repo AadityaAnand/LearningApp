@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
-  Briefcase,
   Target,
   BookOpen,
   Zap,
@@ -25,7 +24,7 @@ const Landing = () => {
   });
 
   return (
-    <div ref={containerRef} className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
       <main>
         <HeroSection />
