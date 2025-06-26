@@ -22,8 +22,12 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 // Utils
 const { sendEmail } = require('./utils/email');
+const llmService = require('./utils/llm');
 
 const app = express();
+
+// Multer configuration for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.set('trust proxy', 1); // Trust first proxy
 
@@ -82,26 +86,98 @@ app.post('/api/auth/register', [
     const user = new User({ email, password, firstName, lastName, careerGoal, resumeUrl });
     await user.save();
     
-    // --- LLM Integration Placeholder ---
-    // In a real implementation, you would:
-    // 1. Parse the resume PDF to extract text.
-    // 2. Call an LLM API (e.g., Claude, OpenAI) with a prompt that includes the resume text and careerGoal.
-    // 3. The LLM would return a structured JSON learning plan.
-    // 4. Save that plan to the database.
-
-    // For now, we'll create a mock learning plan.
-    const mockPlanStructure = {
-      title: `Your Personalized Plan to become a ${careerGoal.substring(0,20)}...`,
-      modules: [
-        { title: "Module 1: Foundational Skills", lessons: ["Lesson 1.1", "Lesson 1.2"] },
-        { title: "Module 2: Core Concepts", lessons: ["Lesson 2.1", "Lesson 2.2"] },
-        { title: "Module 3: Advanced Topics", lessons: ["Lesson 3.1", "Lesson 3.2"] }
-      ]
-    };
+    // --- LLM Integration ---
+    // Generate personalized learning plan using LLM
+    let learningPlanStructure;
+    try {
+      // In a real implementation, you would parse the resume PDF to extract text
+      // For now, we'll use a placeholder resume text
+      const resumeText = req.body.resume ? "Resume content would be extracted here" : "";
+      
+      learningPlanStructure = await llmService.generateLearningPlan(resumeText, careerGoal);
+      console.log('Learning plan generated successfully using LLM');
+    } catch (error) {
+      console.error('LLM generation failed, using fallback plan:', error);
+      // Fallback to mock plan if LLM fails
+      learningPlanStructure = {
+        title: `Your Personalized Plan to become a ${careerGoal.substring(0,20)}...`,
+        summary: `A comprehensive learning journey designed to help you transition into ${careerGoal}.`,
+        modules: [
+          { 
+            title: "Module 1: Foundational Skills", 
+            description: "Build the core fundamentals needed for your career transition",
+            lessons: [
+              {
+                title: "Lesson 1.1: Introduction to Programming",
+                description: "Learn basic programming concepts",
+                duration: "60",
+                difficulty: "beginner",
+                resources: ["Video Lectures", "Interactive Exercises"]
+              },
+              {
+                title: "Lesson 1.2: Problem Solving",
+                description: "Develop algorithmic thinking",
+                duration: "90",
+                difficulty: "beginner",
+                resources: ["Practice Problems", "Code Challenges"]
+              }
+            ]
+          },
+          { 
+            title: "Module 2: Core Concepts", 
+            description: "Master the specific technologies relevant to your career goal",
+            lessons: [
+              {
+                title: "Lesson 2.1: Modern Web Development",
+                description: "Learn HTML, CSS, JavaScript",
+                duration: "120",
+                difficulty: "intermediate",
+                resources: ["Project-Based Learning", "Documentation"]
+              },
+              {
+                title: "Lesson 2.2: Backend Development",
+                description: "Build server-side applications",
+                duration: "150",
+                difficulty: "intermediate",
+                resources: ["Hands-on Projects", "API Documentation"]
+              }
+            ]
+          },
+          { 
+            title: "Module 3: Advanced Topics", 
+            description: "Dive deep into advanced concepts and real-world applications",
+            lessons: [
+              {
+                title: "Lesson 3.1: System Design",
+                description: "Design scalable systems",
+                duration: "180",
+                difficulty: "advanced",
+                resources: ["Case Studies", "Architecture Patterns"]
+              },
+              {
+                title: "Lesson 3.2: DevOps & Deployment",
+                description: "Master deployment and infrastructure",
+                duration: "120",
+                difficulty: "intermediate",
+                resources: ["Cloud Platforms", "Automation Tools"]
+              }
+            ]
+          }
+        ],
+        estimatedDuration: "40 hours",
+        prerequisites: ["Basic computer literacy", "Willingness to learn"],
+        learningOutcomes: [
+          "Proficiency in modern programming languages",
+          "Understanding of software development lifecycle",
+          "Ability to build and deploy applications",
+          "Problem-solving and algorithmic thinking skills"
+        ]
+      };
+    }
     
     const learningPlan = new LearningPlan({
       user: user._id,
-      structure: mockPlanStructure,
+      structure: learningPlanStructure,
     });
     await learningPlan.save();
     
@@ -387,9 +463,255 @@ app.get('/api/lessons/:slug', async (req, res) => {
     }
 });
 
+// --- LEARNING PLAN ROUTES ---
+
+// Get current user's learning plan
+app.get('/api/learning-plans/current', auth, async (req, res) => {
+  try {
+    const learningPlan = await LearningPlan.findOne({ user: req.user._id });
+    
+    if (!learningPlan) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No learning plan found. Please complete your registration.' 
+      });
+    }
+
+    // Calculate progress metrics
+    const totalLessons = learningPlan.structure.modules?.reduce((total, module) => 
+      total + (module.lessons?.length || 0), 0) || 0;
+    
+    const completedLessons = 0; // This would be calculated from Progress model in a real implementation
+    
+    res.json({
+      success: true,
+      learningPlan: {
+        ...learningPlan.toObject(),
+        totalLessons,
+        completedLessons,
+        progressPercentage: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching learning plan:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Update learning plan progress
+app.put('/api/learning-plans/progress', auth, async (req, res) => {
+  try {
+    const { progress, status } = req.body;
+    
+    const learningPlan = await LearningPlan.findOne({ user: req.user._id });
+    if (!learningPlan) {
+      return res.status(404).json({ success: false, message: 'Learning plan not found' });
+    }
+
+    if (progress !== undefined) {
+      learningPlan.progress = Math.max(0, Math.min(100, progress));
+    }
+    
+    if (status && ['not-started', 'in-progress', 'completed'].includes(status)) {
+      learningPlan.status = status;
+    }
+
+    await learningPlan.save();
+    
+    res.json({ success: true, learningPlan });
+  } catch (error) {
+    console.error('Error updating learning plan:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Regenerate learning plan (for when user wants to update their goals)
+app.post('/api/learning-plans/regenerate', auth, async (req, res) => {
+  try {
+    const { careerGoal } = req.body;
+    
+    if (!careerGoal) {
+      return res.status(400).json({ success: false, message: 'Career goal is required' });
+    }
+
+    // Generate new learning plan using LLM
+    let newPlanStructure;
+    try {
+      // Use existing resume text if available, otherwise empty string
+      const resumeText = req.user.resumeUrl ? "Resume content would be extracted here" : "";
+      
+      newPlanStructure = await llmService.generateLearningPlan(resumeText, careerGoal);
+      console.log('Learning plan regenerated successfully using LLM');
+    } catch (error) {
+      console.error('LLM regeneration failed, using fallback plan:', error);
+      // Fallback to mock plan if LLM fails
+      newPlanStructure = {
+        title: `Updated Plan to become a ${careerGoal.substring(0, 30)}...`,
+        summary: `A comprehensive learning journey designed to help you transition into ${careerGoal}.`,
+        modules: [
+          { 
+            title: "Module 1: Updated Foundations", 
+            description: "Build the core fundamentals needed for your career transition",
+            lessons: [
+              {
+                title: "Updated Lesson 1.1: Advanced Programming",
+                description: "Master advanced programming concepts",
+                duration: "90",
+                difficulty: "intermediate",
+                resources: ["Advanced Tutorials", "Complex Exercises"]
+              },
+              {
+                title: "Updated Lesson 1.2: System Architecture",
+                description: "Learn system design principles",
+                duration: "120",
+                difficulty: "advanced",
+                resources: ["Architecture Patterns", "Case Studies"]
+              }
+            ]
+          },
+          { 
+            title: "Module 2: Advanced Core Concepts", 
+            description: "Master advanced technologies relevant to your career goal",
+            lessons: [
+              {
+                title: "Updated Lesson 2.1: Advanced Web Development",
+                description: "Learn advanced frontend and backend concepts",
+                duration: "180",
+                difficulty: "advanced",
+                resources: ["Advanced Projects", "Performance Optimization"]
+              },
+              {
+                title: "Updated Lesson 2.2: Cloud Architecture",
+                description: "Design and deploy cloud-native applications",
+                duration: "150",
+                difficulty: "advanced",
+                resources: ["Cloud Platforms", "Microservices"]
+              }
+            ]
+          },
+          { 
+            title: "Module 3: Specialized Topics", 
+            description: "Focus on specialized areas relevant to your career goal",
+            lessons: [
+              {
+                title: "Updated Lesson 3.1: Machine Learning Integration",
+                description: "Integrate ML into your applications",
+                duration: "200",
+                difficulty: "advanced",
+                resources: ["ML Frameworks", "Real-world Projects"]
+              },
+              {
+                title: "Updated Lesson 3.2: Security & Best Practices",
+                description: "Implement security best practices",
+                duration: "120",
+                difficulty: "intermediate",
+                resources: ["Security Guidelines", "Penetration Testing"]
+              }
+            ]
+          }
+        ],
+        estimatedDuration: "50 hours",
+        prerequisites: ["Intermediate programming skills", "Basic system design knowledge"],
+        learningOutcomes: [
+          "Expert-level programming skills",
+          "Advanced system design capabilities",
+          "Cloud-native application development",
+          "Security-first development practices"
+        ]
+      };
+    }
+
+    let learningPlan = await LearningPlan.findOne({ user: req.user._id });
+    
+    if (learningPlan) {
+      learningPlan.structure = newPlanStructure;
+      learningPlan.progress = 0;
+      learningPlan.status = 'not-started';
+    } else {
+      learningPlan = new LearningPlan({
+        user: req.user._id,
+        structure: newPlanStructure,
+        progress: 0,
+        status: 'not-started'
+      });
+    }
+
+    await learningPlan.save();
+    
+    // Update user's career goal
+    req.user.careerGoal = careerGoal;
+    await req.user.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Learning plan regenerated successfully',
+      learningPlan 
+    });
+  } catch (error) {
+    console.error('Error regenerating learning plan:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get recent progress/activity
+app.get('/api/progress/recent', auth, async (req, res) => {
+  try {
+    // In a real implementation, this would fetch from the Progress model
+    // For now, return mock data
+    const mockProgress = [
+      {
+        _id: '1',
+        lesson: { title: 'React Hooks Basics' },
+        completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        score: 95
+      },
+      {
+        _id: '2',
+        lesson: { title: 'JavaScript Promises' },
+        completedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+        score: 88
+      }
+    ];
+
+    res.json({ success: true, progress: mockProgress });
+  } catch (error) {
+    console.error('Error fetching recent progress:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Micro-learning API is running' });
+});
+
+// --- ROADMAP GENERATION ENDPOINT ---
+app.post('/api/roadmap/generate', upload.single('resume'), async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!req.file || !role) {
+      return res.status(400).json({ success: false, message: 'Resume and desired role are required.' });
+    }
+    // In a real implementation, you would parse the resume and send it to the LLM here.
+    // For now, return a mock roadmap.
+    const mockRoadmap = {
+      title: `Roadmap to become a ${role}`,
+      skills: [
+        'Skill 1: Foundations',
+        'Skill 2: Core Concepts',
+        'Skill 3: Advanced Topics'
+      ],
+      courses: [
+        { title: 'Course 1', description: 'Introductory course', materials: ['Video', 'Article'] },
+        { title: 'Course 2', description: 'Intermediate course', materials: ['Book', 'Project'] },
+        { title: 'Course 3', description: 'Advanced course', materials: ['Research Paper', 'Case Study'] }
+      ]
+    };
+    res.json({ success: true, roadmap: mockRoadmap });
+  } catch (error) {
+    console.error('Roadmap generation error:', error);
+    res.status(500).json({ success: false, message: 'Server error during roadmap generation.' });
+  }
 });
 
 // Error handling middleware
@@ -524,34 +846,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app; 
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-// --- ROADMAP GENERATION ENDPOINT ---
-app.post('/api/roadmap/generate', upload.single('resume'), async (req, res) => {
-  try {
-    const { role } = req.body;
-    if (!req.file || !role) {
-      return res.status(400).json({ success: false, message: 'Resume and desired role are required.' });
-    }
-    // In a real implementation, you would parse the resume and send it to the LLM here.
-    // For now, return a mock roadmap.
-    const mockRoadmap = {
-      title: `Roadmap to become a ${role}`,
-      skills: [
-        'Skill 1: Foundations',
-        'Skill 2: Core Concepts',
-        'Skill 3: Advanced Topics'
-      ],
-      courses: [
-        { title: 'Course 1', description: 'Introductory course', materials: ['Video', 'Article'] },
-        { title: 'Course 2', description: 'Intermediate course', materials: ['Book', 'Project'] },
-        { title: 'Course 3', description: 'Advanced course', materials: ['Research Paper', 'Case Study'] }
-      ]
-    };
-    res.json({ success: true, roadmap: mockRoadmap });
-  } catch (error) {
-    console.error('Roadmap generation error:', error);
-    res.status(500).json({ success: false, message: 'Server error during roadmap generation.' });
-  }
-}); 
