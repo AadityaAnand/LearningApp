@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -69,36 +69,14 @@ const Header = () => {
 };
 
 const HeroSection = () => {
-  const [resume, setResume] = React.useState(null);
-  const [role, setRole] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [success, setSuccess] = React.useState(false);
+  const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess(false);
-    if (!resume || !role) {
-      setError("Please upload your resume and enter your desired role.");
-      return;
-    }
     setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("resume", resume);
-      formData.append("role", role);
-      const res = await fetch("/api/roadmap/generate", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Failed to generate roadmap. Please try again.");
-      setSuccess(true);
-    } catch (err) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
+    // Redirect to registration with the role pre-filled
+    window.location.href = `/register?role=${encodeURIComponent(role)}`;
   };
 
   return (
@@ -120,17 +98,6 @@ const HeroSection = () => {
         </p>
         <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg p-6 flex flex-col gap-4 items-center mb-6">
           <div className="w-full flex flex-col gap-2">
-            <label htmlFor="resume" className="font-semibold text-gray-700 dark:text-gray-200 text-left">Upload Resume (PDF/DOCX)</label>
-            <input
-              type="file"
-              id="resume"
-              accept=".pdf,.doc,.docx"
-              onChange={e => setResume(e.target.files[0])}
-              className="file-input file-input-bordered w-full"
-              required
-            />
-          </div>
-          <div className="w-full flex flex-col gap-2">
             <label htmlFor="role" className="font-semibold text-gray-700 dark:text-gray-200 text-left">Desired Role</label>
             <input
               type="text"
@@ -142,18 +109,12 @@ const HeroSection = () => {
               required
             />
           </div>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && (
-            <div className="text-green-600 text-sm font-semibold">
-              Roadmap generated! <span className="block">Please <Link to="/register" className="underline text-primary-600 dark:text-primary-400">sign up</Link> or <Link to="/login" className="underline text-primary-600 dark:text-primary-400">log in</Link> to view your personalized plan.</span>
-            </div>
-          )}
           <button
             type="submit"
             className="btn-primary text-lg px-8 py-3 mt-2 flex items-center justify-center"
             disabled={loading}
           >
-            {loading ? 'Generating...' : 'Get My Roadmap'}
+            {loading ? 'Redirecting...' : 'Get My Roadmap'}
           </button>
         </form>
         <motion.div

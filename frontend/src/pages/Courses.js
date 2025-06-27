@@ -28,7 +28,7 @@ const Courses = () => {
       if (selectedCategory) params.append('category', selectedCategory);
       if (selectedDifficulty) params.append('difficulty', selectedDifficulty);
 
-      const response = await axios.get(`/api/courses?${params}`);
+      const response = await axios.get(`/courses?${params}`);
       setCourses(response.data.courses);
       setTotalPages(response.data.totalPages);
     } catch (error) {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
@@ -16,6 +16,19 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle role parameter from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const role = params.get('role');
+    if (role) {
+      setFormData(prev => ({
+        ...prev,
+        careerGoal: role
+      }));
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -72,6 +85,11 @@ const Register = () => {
               sign in to your existing account
             </Link>
           </p>
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              <strong>Note:</strong> If you plan to register with Google or GitHub, you can upload your resume after registration from your profile page.
+            </p>
+          </div>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -160,6 +178,9 @@ const Register = () => {
                 onChange={handleChange}
                 className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/20 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/30"
               />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Upload your resume to get a more personalized learning plan. You can also upload it later from your profile.
+              </p>
             </div>
             
             <div>

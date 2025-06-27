@@ -8,6 +8,7 @@ const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const multer = require('multer');
+const axios = require('axios');
 
 // Models
 const User = require('./models/User');
@@ -60,7 +61,7 @@ const generateToken = (userId) => {
   });
 };
 
-app.post('/api/auth/register', [
+app.post('/api/auth/register', upload.single('resume'), [
   body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
   body('firstName').trim().notEmpty().withMessage('First name is required'),
@@ -73,10 +74,16 @@ app.post('/api/auth/register', [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
     const { email, password, firstName, lastName, careerGoal } = req.body;
-    // In a real app, you would handle file upload here (e.g., with multer)
-    // and save the resume to a storage service like S3.
-    // For now, we'll just simulate a resume URL.
-    const resumeUrl = req.body.resume ? `/uploads/resumes/placeholder.pdf` : '';
+    
+    // Handle resume upload
+    let resumeUrl = '';
+    if (req.file) {
+      // In a real app, you would save the file to cloud storage (S3, etc.)
+      // For now, we'll store the file info and generate a placeholder URL
+      const fileName = `resume_${Date.now()}_${req.file.originalname}`;
+      resumeUrl = `/uploads/resumes/${fileName}`;
+      // You would save req.file.buffer to your storage service here
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -92,7 +99,7 @@ app.post('/api/auth/register', [
     try {
       // In a real implementation, you would parse the resume PDF to extract text
       // For now, we'll use a placeholder resume text
-      const resumeText = req.body.resume ? "Resume content would be extracted here" : "";
+      const resumeText = req.file ? "Resume content would be extracted here" : "";
       
       learningPlanStructure = await llmService.generateLearningPlan(resumeText, careerGoal);
       console.log('Learning plan generated successfully using LLM');
@@ -399,6 +406,74 @@ app.put('/api/users/password', auth, [
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ success: false, message: 'Server error during password change' });
+  }
+});
+
+// Resume upload endpoint for registered users
+app.post('/api/users/resume', auth, upload.single('resume'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Resume file is required' });
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: 'Only PDF, DOC, and DOCX files are allowed' });
+    }
+
+    // Validate file size (5MB limit)
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'File size must be less than 5MB' });
+    }
+
+    // In a real app, you would save the file to cloud storage (S3, etc.)
+    // For now, we'll store the file info and generate a placeholder URL
+    const fileName = `resume_${Date.now()}_${req.file.originalname}`;
+    const resumeUrl = `/uploads/resumes/${fileName}`;
+    // You would save req.file.buffer to your storage service here
+
+    // Update user's resume URL
+    req.user.resumeUrl = resumeUrl;
+    await req.user.save();
+
+    // Regenerate learning plan with new resume
+    try {
+      const resumeText = "Resume content would be extracted here"; // In real app, parse the PDF
+      const learningPlanStructure = await llmService.generateLearningPlan(resumeText, req.user.careerGoal);
+      
+      // Update or create learning plan
+      let learningPlan = await LearningPlan.findOne({ user: req.user._id });
+      if (learningPlan) {
+        learningPlan.structure = learningPlanStructure;
+        await learningPlan.save();
+      } else {
+        learningPlan = new LearningPlan({
+          user: req.user._id,
+          structure: learningPlanStructure,
+        });
+        await learningPlan.save();
+        req.user.learningPlan = learningPlan._id;
+        await req.user.save();
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Resume uploaded and learning plan updated successfully',
+        user: req.user.getProfile()
+      });
+    } catch (error) {
+      console.error('LLM generation failed:', error);
+      // Still save the resume even if LLM fails
+      res.json({ 
+        success: true, 
+        message: 'Resume uploaded successfully. Learning plan update failed.',
+        user: req.user.getProfile()
+      });
+    }
+  } catch (error) {
+    console.error('Resume upload error:', error);
+    res.status(500).json({ success: false, message: 'Server error during resume upload' });
   }
 });
 
@@ -711,6 +786,62 @@ app.post('/api/roadmap/generate', upload.single('resume'), async (req, res) => {
   } catch (error) {
     console.error('Roadmap generation error:', error);
     res.status(500).json({ success: false, message: 'Server error during roadmap generation.' });
+  }
+});
+
+// Judge0 language mapping (frontend language value -> Judge0 language_id)
+const JUDGE0_LANGUAGES = {
+  javascript: 63, // Node.js
+  python: 71, // Python 3
+  java: 62, // Java
+  cpp: 54, // C++
+  c: 50, // C
+  csharp: 51, // C#
+  php: 68, // PHP
+  ruby: 72, // Ruby
+  go: 60, // Go
+  swift: 83, // Swift
+  kotlin: 78, // Kotlin
+  typescript: 74, // TypeScript
+  rust: 73, // Rust
+};
+
+// Proxy endpoint for code execution
+app.post('/api/code/execute', async (req, res) => {
+  try {
+    const { language, code } = req.body;
+    if (!language || !code) {
+      return res.status(400).json({ error: 'Language and code are required.' });
+    }
+    const language_id = JUDGE0_LANGUAGES[language];
+    if (!language_id) {
+      return res.status(400).json({ error: 'Unsupported language.' });
+    }
+
+    // Send code to Judge0
+    const submission = await axios.post(
+      'https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true',
+      {
+        source_code: code,
+        language_id,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+        },
+      }
+    );
+
+    res.json({
+      output: submission.data.stdout,
+      stderr: submission.data.stderr,
+      compile_output: submission.data.compile_output,
+      status: submission.data.status,
+    });
+  } catch (error) {
+    console.error('Judge0 error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Code execution failed.' });
   }
 });
 

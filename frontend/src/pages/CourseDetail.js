@@ -17,7 +17,7 @@ const CourseDetail = () => {
   const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
-      const endpoint = user ? `/api/courses/${slug}/progress` : `/api/courses/${slug}`;
+      const endpoint = user ? `/courses/${slug}/progress` : `/courses/${slug}`;
       const response = await axios.get(endpoint);
       
       if (user) {

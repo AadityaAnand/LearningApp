@@ -66,6 +66,17 @@ const lessonSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  expectedOutput: {
+    type: String,
+    default: ''
+  },
+  testCases: [
+    {
+      input: { type: String },
+      expectedOutput: { type: String },
+      hidden: { type: Boolean, default: false }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now

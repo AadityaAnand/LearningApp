@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, CheckCircle, Circle, Play, BookOpen, Clock }
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
-import axios from 'axios';
+import axios from '../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import CodeEditor from '../components/CodeEditor';
@@ -22,11 +22,15 @@ const LessonViewer = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [error, setError] = useState(null);
+  const [editorLanguage, setEditorLanguage] = useState('javascript');
+  const [editorCode, setEditorCode] = useState('');
+  const [output, setOutput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
 
   const fetchLessonData = useCallback(async () => {
     try {
       setLoading(true);
-      const endpoint = user ? `/api/lessons/${lessonSlug}/progress` : `/api/lessons/${lessonSlug}`;
+      const endpoint = user ? `/lessons/${lessonSlug}/progress` : `/lessons/${lessonSlug}`;
       const response = await axios.get(endpoint);
       
       if (user) {
@@ -52,7 +56,7 @@ const LessonViewer = () => {
   const setInitialProgress = useCallback(async (lessonId) => {
     if (!user) return;
     try {
-      await axios.post('/api/progress/update', {
+      await axios.post('/progress/update', {
         lessonId,
         status: 'in_progress',
       });
@@ -84,7 +88,7 @@ const LessonViewer = () => {
   const updateProgress = useCallback(async (lessonId, status) => {
     if (!user) return;
     try {
-      await axios.put(`/api/courses/${courseSlug}/lessons/${lessonSlug}/progress`, {
+      await axios.put(`/courses/${courseSlug}/lessons/${lessonSlug}/progress`, {
         timeSpent: 1,
         status: status
       });
@@ -97,7 +101,7 @@ const LessonViewer = () => {
   const handleMarkAsComplete = async () => {
     if (lesson) {
        try {
-        await axios.post('/api/progress/update', {
+        await axios.post('/progress/update', {
           lessonId: lesson._id,
           status: 'completed',
         });
@@ -131,6 +135,25 @@ const LessonViewer = () => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  // Handler for running code (to be wired to backend/Judge0)
+  const handleRunCode = async () => {
+    setIsRunning(true);
+    setOutput('');
+    try {
+      // TODO: Replace with backend call to Judge0 proxy
+      const response = await axios.post('/code/execute', {
+        language: editorLanguage,
+        code: editorCode,
+        lessonId: lesson._id,
+      });
+      setOutput(response.data.output || response.data.stderr || '');
+    } catch (err) {
+      setOutput('Error running code.');
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   if (loading) {
@@ -233,8 +256,49 @@ const LessonViewer = () => {
                   {lesson.content}
                 </ReactMarkdown>
               </div>
-              {/* Code Editor */}
-              <CodeEditor lessonId={lesson._id} />
+              {/* Interactive Code Editor Section */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
+                <h2 className="text-lg font-semibold mb-2">Try it Yourself</h2>
+                <div className="mb-2 flex items-center gap-2">
+                  <label htmlFor="editor-language" className="font-medium">Language:</label>
+                  <select
+                    id="editor-language"
+                    value={editorLanguage}
+                    onChange={e => setEditorLanguage(e.target.value)}
+                    className="border rounded px-2 py-1"
+                  >
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++</option>
+                    <option value="c">C</option>
+                    <option value="csharp">C#</option>
+                    <option value="php">PHP</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="go">Go</option>
+                    <option value="swift">Swift</option>
+                    <option value="kotlin">Kotlin</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="rust">Rust</option>
+                  </select>
+                </div>
+                <CodeEditor
+                  lessonId={lesson._id}
+                  language={editorLanguage}
+                  code={editorCode}
+                  setCode={setEditorCode}
+                />
+                <button
+                  onClick={handleRunCode}
+                  disabled={isRunning}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium mb-4"
+                >
+                  {isRunning ? 'Running...' : 'Run Code'}
+                </button>
+                <div className="bg-black text-green-400 font-mono rounded p-4 min-h-[60px]">
+                  <pre className="whitespace-pre-wrap">{output}</pre>
+                </div>
+              </div>
 
               {/* Lesson Actions */}
               <div className="mt-8 pt-8 border-t border-gray-200">

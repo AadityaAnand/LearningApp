@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Lock, Camera, Save, Edit, Trash2, Shield } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, Edit, Trash2, Shield, FileText, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const { user, updateProfile, changePassword, loading } = useAuth();
+  const { user, updateProfile, changePassword, uploadResume, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   const { register: registerProfile, handleSubmit: handleProfileSubmit, reset: resetProfileForm, formState: { errors: profileErrors } } = useForm({
     defaultValues: {
@@ -36,6 +38,24 @@ const Profile = () => {
     }
   };
 
+  const handleResumeUpload = async (e) => {
+    e.preventDefault();
+    if (!resumeFile) {
+      toast.error('Please select a resume file');
+      return;
+    }
+
+    setUploadingResume(true);
+    const { success } = await uploadResume(resumeFile);
+    if (success) {
+      setResumeFile(null);
+      // Reset the file input
+      const fileInput = document.getElementById('resume-upload');
+      if (fileInput) fileInput.value = '';
+    }
+    setUploadingResume(false);
+  };
+
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
     resetProfileForm({
@@ -52,6 +72,7 @@ const Profile = () => {
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
+    { id: 'resume', name: 'Resume', icon: FileText },
     { id: 'security', name: 'Password', icon: Shield }
   ];
 
@@ -115,6 +136,69 @@ const Profile = () => {
                 </div>
               )}
             </form>
+          )}
+
+          {activeTab === 'resume' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Resume Management</h3>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="mb-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-2">Current Resume</h4>
+                  {user.resumeUrl ? (
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-green-500" />
+                      <span className="text-sm text-gray-600">Resume uploaded</span>
+                      <span className="text-xs text-gray-500">({user.resumeUrl.split('/').pop()})</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm text-gray-500">No resume uploaded</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Upload New Resume</h4>
+                  <form onSubmit={handleResumeUpload} className="space-y-4">
+                    <div>
+                      <label htmlFor="resume-upload" className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Resume File
+                      </label>
+                      <input
+                        id="resume-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => setResumeFile(e.target.files[0])}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Accepted formats: PDF, DOC, DOCX (max 5MB)
+                      </p>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      disabled={!resumeFile || uploadingResume}
+                      className="btn-primary flex items-center"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadingResume ? 'Uploading...' : 'Upload Resume'}
+                    </button>
+                  </form>
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h5 className="text-sm font-medium text-blue-900 mb-2">Why upload a resume?</h5>
+                  <p className="text-sm text-blue-700">
+                    Your resume helps our AI create a more personalized learning plan by understanding your current skills, experience, and career background. This leads to better recommendations and a more tailored learning experience.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'security' && (
