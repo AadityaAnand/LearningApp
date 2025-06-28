@@ -1,7 +1,8 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
 // Pages
 import Landing from './pages/Landing';
@@ -18,12 +19,20 @@ import VerifyEmail from './pages/VerifyEmail';
 import Admin from './pages/Admin';
 
 function App() {
+  const { user } = useAuth();
+
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={
+          user ? <Navigate to="/dashboard" replace /> : <Landing />
+        } />
+        <Route path="/login" element={
+          user ? <Navigate to="/dashboard" replace /> : <Login />
+        } />
+        <Route path="/register" element={
+          user ? <Navigate to="/dashboard" replace /> : <Register />
+        } />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />

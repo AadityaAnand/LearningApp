@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 const Dashboard = () => {
   const { user } = useAuth();
   const [learningPlan, setLearningPlan] = useState(null);
-  const [recentProgress, setRecentProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
 
@@ -21,11 +20,12 @@ const Dashboard = () => {
         ]);
         
         setLearningPlan(planResponse.data.learningPlan);
-        setRecentProgress(progressResponse.data.progress);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         if (error.response?.status === 404) {
           toast.error('No learning plan found. Please complete your registration.');
+        } else {
+          toast.error('Failed to load your learning plan');
         }
       } finally {
         setLoading(false);
@@ -38,11 +38,7 @@ const Dashboard = () => {
   const handleRegeneratePlan = async () => {
     setRegenerating(true);
     try {
-      const response = await axios.post('/learning-plans/regenerate', {
-        careerGoal: user.careerGoal
-      });
-      setLearningPlan(response.data.learningPlan);
-      toast.success('Learning plan regenerated successfully!');
+      toast.success('Learning plan regeneration feature coming soon!');
     } catch (error) {
       console.error('Error regenerating plan:', error);
       toast.error('Failed to regenerate learning plan');
@@ -307,43 +303,18 @@ const Dashboard = () => {
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Activity</h3>
             </div>
             <div className="p-6">
-              {recentProgress.length > 0 ? (
-                <div className="space-y-4">
-                  {recentProgress.map((progress) => (
-                    <div key={progress._id} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{progress.lesson.title}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Completed {new Date(progress.completedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                          {progress.score}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 dark:text-gray-500 text-6xl mb-4">📖</div>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    No recent activity. Start your first lesson!
-                  </p>
-                  <Link
-                    to="/courses"
-                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
-                  >
-                    Browse Courses
-                  </Link>
-                </div>
-              )}
+              <div className="text-center py-8">
+                <div className="text-gray-400 dark:text-gray-500 text-6xl mb-4">📖</div>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  No recent activity. Start your first lesson!
+                </p>
+                <Link
+                  to="/courses"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+                >
+                  Browse Courses
+                </Link>
+              </div>
             </div>
           </div>
 
