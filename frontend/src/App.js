@@ -17,6 +17,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import Admin from './pages/Admin';
+import ModuleDetail from './pages/ModuleDetail';
 
 function App() {
   const { user } = useAuth();
@@ -70,6 +71,12 @@ function App() {
         <Route path="/admin" element={
           <ProtectedRoute>
             <Admin />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/modules/:moduleIndex" element={
+          <ProtectedRoute>
+            <ModuleDetail />
           </ProtectedRoute>
         } />
       </Routes>

@@ -6,7 +6,9 @@ class LLMService {
   }
 
   detectProvider() {
-    if (process.env.ANTHROPIC_API_KEY) {
+    if (process.env.LLM_PROVIDER === 'ollama') {
+      return 'ollama';
+    } else if (process.env.ANTHROPIC_API_KEY) {
       return 'anthropic';
     } else if (process.env.OPENAI_API_KEY) {
       return 'openai';
@@ -17,27 +19,29 @@ class LLMService {
     }
   }
 
-  async generateLearningPlan(resumeText, careerGoal) {
+  async generateLearningPlan(resumeText, careerGoal, currentRole = '', targetRole = '') {
     try {
       switch (this.provider) {
+        case 'ollama':
+          return await this.generateWithOllama(resumeText, careerGoal, currentRole, targetRole);
         case 'anthropic':
-          return await this.generateWithClaude(resumeText, careerGoal);
+          return await this.generateWithClaude(resumeText, careerGoal, currentRole, targetRole);
         case 'openai':
-          return await this.generateWithOpenAI(resumeText, careerGoal);
+          return await this.generateWithOpenAI(resumeText, careerGoal, currentRole, targetRole);
         case 'google':
-          return await this.generateWithGemini(resumeText, careerGoal);
+          return await this.generateWithGemini(resumeText, careerGoal, currentRole, targetRole);
         default:
-          return this.generateMockPlan(resumeText, careerGoal);
+          return this.generateMockPlan(resumeText, careerGoal, currentRole, targetRole);
       }
     } catch (error) {
       console.error('LLM API error:', error);
       // Fallback to mock plan if API fails
-      return this.generateMockPlan(resumeText, careerGoal);
+      return this.generateMockPlan(resumeText, careerGoal, currentRole, targetRole);
     }
   }
 
-  async generateWithClaude(resumeText, careerGoal) {
-    const prompt = this.buildPrompt(resumeText, careerGoal);
+  async generateWithClaude(resumeText, careerGoal, currentRole = '', targetRole = '') {
+    const prompt = this.buildPrompt(resumeText, careerGoal, currentRole, targetRole);
     
     const response = await axios.post('https://api.anthropic.com/v1/messages', {
       model: process.env.ANTHROPIC_MODEL || 'claude-3-sonnet-20240229',
@@ -60,8 +64,8 @@ class LLMService {
     return this.parseLLMResponse(content);
   }
 
-  async generateWithOpenAI(resumeText, careerGoal) {
-    const prompt = this.buildPrompt(resumeText, careerGoal);
+  async generateWithOpenAI(resumeText, careerGoal, currentRole = '', targetRole = '') {
+    const prompt = this.buildPrompt(resumeText, careerGoal, currentRole, targetRole);
     
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: process.env.OPENAI_MODEL || 'gpt-4',
@@ -88,8 +92,8 @@ class LLMService {
     return this.parseLLMResponse(content);
   }
 
-  async generateWithGemini(resumeText, careerGoal) {
-    const prompt = this.buildPrompt(resumeText, careerGoal);
+  async generateWithGemini(resumeText, careerGoal, currentRole = '', targetRole = '') {
+    const prompt = this.buildPrompt(resumeText, careerGoal, currentRole, targetRole);
     
     const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/${process.env.GOOGLE_MODEL || 'gemini-pro'}:generateContent`, {
       contents: [{
@@ -110,41 +114,86 @@ class LLMService {
     return this.parseLLMResponse(content);
   }
 
-  buildPrompt(resumeText, careerGoal) {
-    return `You are an expert career counselor and learning path designer. Based on the following resume and career goal, create a personalized learning plan.
+  async generateWithOllama(resumeText, careerGoal, currentRole = '', targetRole = '') {
+    const prompt = this.buildPrompt(resumeText, careerGoal, currentRole, targetRole);
+    const model = process.env.OLLAMA_MODEL || 'llama2';
+    try {
+      const response = await axios.post('http://localhost:11434/api/generate', {
+        model,
+        prompt,
+        stream: false
+      });
+      const content = response.data.response;
+      return this.parseLLMResponse(content);
+    } catch (error) {
+      console.error('Ollama API error:', error);
+      return this.generateMockPlan(resumeText, careerGoal, currentRole, targetRole);
+    }
+  }
 
-RESUME:
-${resumeText || 'No resume provided'}
+  buildPrompt(resumeText, careerGoal, currentRole = '', targetRole = '') {
+    return `You are a career development AI that creates personalized learning schedules based on comprehensive resume analysis.
 
-CAREER GOAL:
-${careerGoal}
+**User Context:**
+- Current Resume: ${resumeText || 'No resume provided'}
+- Current Position: ${currentRole || '[CURRENT_ROLE]'}
+- Target Position: ${targetRole || '[TARGET_ROLE]'}
+- Career Goal: ${careerGoal}
 
-Please create a comprehensive learning plan with the following structure (respond in valid JSON format only):
+**Your Task:**
+Analyze the resume thoroughly to identify existing skills, education, and experience. Create a learning schedule that builds upon what they already have and focuses ONLY on skill gaps needed for their target role.
 
+**Analysis Instructions:**
+1. Extract current skills, technologies, and tools from resume
+2. Identify education level and relevant coursework/certifications
+3. Assess work experience and projects
+4. Compare against target role requirements
+5. Focus learning plan ONLY on missing skills and knowledge gaps
+
+**Output Format (JSON):**
 {
-  "title": "Personalized Learning Plan for [Career Goal]",
-  "summary": "Brief overview of the learning journey",
+  "title": "Personalized Learning Plan: [Current Role] to [Target Role]",
+  "disclaimer": "This plan is customized based on your uploaded resume. Skills already demonstrated in your resume are not included in this learning path.",
+  "resumeAnalysis": {
+    "existingSkills": ["skill1", "skill2", "skill3"],
+    "education": "Brief summary of educational background",
+    "experience": "Years of experience and relevant roles",
+    "strengths": ["strength1", "strength2"]
+  },
+  "skillGaps": ["gap1", "gap2", "gap3"],
+  "duration": "X weeks",
+  "overview": "Brief summary focusing on what needs to be learned (not what they already know)",
   "modules": [
     {
-      "title": "Module Title",
-      "description": "What this module covers",
+      "week": 1,
+      "title": "Module Name",
+      "objective": "What they'll achieve this week",
       "lessons": [
         {
           "title": "Lesson Title",
-          "description": "What this lesson teaches",
-          "duration": "estimated time in minutes",
-          "difficulty": "beginner/intermediate/advanced",
-          "resources": ["resource type 1", "resource type 2"]
+          "duration": "15-30 mins",
+          "type": "reading|video|practice|project",
+          "content": "Detailed lesson content for NEW skills only",
+          "resources": ["resource1", "resource2"],
+          "prerequisite": "Assumes you already know [existing skill from resume]"
         }
-      ]
+      ],
+      "weeklyGoal": "Specific measurable outcome"
     }
   ],
-  "estimatedDuration": "total estimated time",
-  "prerequisites": ["any prerequisites"],
-  "learningOutcomes": ["what the user will learn"]
+  "timeline": "Realistic timeframe based on existing foundation",
+  "nextSteps": ["immediate actions leveraging existing skills"]
 }
 
-Focus on practical, actionable learning steps that will help achieve the career goal. Include a mix of theoretical knowledge and hands-on projects.`;
+**Guidelines:**
+1. DO NOT include lessons for skills already listed in the resume
+2. Build upon their existing education and experience
+3. Reference their current skills as prerequisites for advanced topics
+4. Create micro-lessons (15-30 minutes each) for NEW skills only
+5. Adjust timeline based on their educational background and experience level
+6. Include disclaimer about plan being based on resume content
+7. Focus on bridging specific gaps rather than starting from scratch
+8. Consider their industry experience when suggesting learning approaches`;
   }
 
   parseLLMResponse(content) {
@@ -161,7 +210,7 @@ Focus on practical, actionable learning steps that will help achieve the career 
     }
   }
 
-  generateMockPlan(resumeText, careerGoal) {
+  generateMockPlan(resumeText, careerGoal, currentRole = '', targetRole = '') {
     const careerGoalShort = careerGoal ? careerGoal.substring(0, 30) : 'Software Developer';
     
     return {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
 import { BookOpen, Trophy, Clock, TrendingUp, Calendar, Target, Brain, CheckCircle, Play, RefreshCw } from 'lucide-react';
@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [learningPlan, setLearningPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -221,7 +222,11 @@ const Dashboard = () => {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Learning Modules</h3>
               <div className="space-y-3">
                 {learningPlan.structure.modules?.map((module, index) => (
-                  <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div
+                    key={index}
+                    className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/modules/${index}`)}
+                  >
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-white">{module.title}</h4>
