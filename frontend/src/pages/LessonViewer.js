@@ -100,7 +100,7 @@ const LessonViewer = () => {
 
   const handleMarkAsComplete = async () => {
     if (lesson) {
-       try {
+    try {
         await axios.post('/progress/update', {
           lessonId: lesson._id,
           status: 'completed',

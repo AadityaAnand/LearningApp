@@ -13,18 +13,18 @@ root.render(
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <App />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              success: {
-                duration: 3000,
-              },
-              error: {
-                duration: 5000,
-              },
-            }}
-          />
+        <App />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            success: {
+              duration: 3000,
+            },
+            error: {
+              duration: 5000,
+            },
+          }}
+        />
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

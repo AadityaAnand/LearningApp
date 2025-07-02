@@ -131,39 +131,39 @@ const CourseDetail = () => {
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         {/* Course Header */}
         <div className="p-8">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-               <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.title}</h1>
-               <p className="text-gray-600 mb-4">{course.description}</p>
-                
-                <div className="flex items-center gap-4 mb-4">
-                 <span className={`px-3 py-1 text-sm font-medium rounded-full ${getDifficultyColor(course.difficulty)}`}>
-                   {course.difficulty}
-                  </span>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="h-4 w-4 mr-1" />
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.title}</h1>
+              <p className="text-gray-600 mb-4">{course.description}</p>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${getDifficultyColor(course.difficulty)}`}>
+                  {course.difficulty}
+                </span>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Clock className="h-4 w-4 mr-1" />
                     {course.estimatedDuration} min
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <BookOpen className="h-4 w-4 mr-1" />
-                   {totalLessons} lessons
-                  </div>
-                  {course.featured && (
-                    <div className="flex items-center text-sm text-yellow-500">
-                      <Star className="h-4 w-4 mr-1" />
-                      Featured
-                    </div>
-                  )}
                 </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <BookOpen className="h-4 w-4 mr-1" />
+                   {totalLessons} lessons
+                </div>
+                {course.featured && (
+                    <div className="flex items-center text-sm text-yellow-500">
+                    <Star className="h-4 w-4 mr-1" />
+                    Featured
+                  </div>
+                )}
               </div>
+                  </div>
               <div className="text-right">
                 {isEnrolled ? (
                   <Link to={`/courses/${course.slug}/lessons/${course.lessons[0]?.slug}`} className="btn-primary">Continue Learning</Link>
                 ) : (
                   <button className="btn-primary">Enroll Now</button>
                 )}
-              </div>
             </div>
+          </div>
         </div>
 
         {/* Course Content */}

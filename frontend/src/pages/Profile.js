@@ -30,7 +30,7 @@ const Profile = () => {
       resetProfileForm(data);
     }
   };
-  
+
   const onPasswordSubmit = async (data) => {
     const { success } = await changePassword(data.currentPassword, data.newPassword);
     if (success) {
@@ -105,37 +105,37 @@ const Profile = () => {
                 <h3 className="text-lg font-medium text-gray-900">Profile Information</h3>
                 {!isEditing && (
                   <button type="button" onClick={handleEditToggle} className="btn-secondary">Edit</button>
-                )}
-              </div>
-              
+                    )}
+                  </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div>
                    <label className="block text-sm font-medium text-gray-700">First Name</label>
                    <input type="text" disabled={!isEditing} {...registerProfile('firstName', { required: 'First name is required' })} className={`input mt-1 ${!isEditing ? 'bg-gray-100' : ''}`} />
                    {profileErrors.firstName && <p className="mt-1 text-sm text-red-600">{profileErrors.firstName.message}</p>}
                  </div>
-                 <div>
+                  <div>
                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
                    <input type="text" disabled={!isEditing} {...registerProfile('lastName', { required: 'Last name is required' })} className={`input mt-1 ${!isEditing ? 'bg-gray-100' : ''}`} />
                    {profileErrors.lastName && <p className="mt-1 text-sm text-red-600">{profileErrors.lastName.message}</p>}
-                 </div>
-                 <div className="md:col-span-2">
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" disabled value={user.email} className="input mt-1 bg-gray-100" />
-                 </div>
-                 <div className="md:col-span-2">
+                  </div>
+                  <div className="md:col-span-2">
                    <label className="block text-sm font-medium text-gray-700">Bio</label>
                    <textarea rows={3} disabled={!isEditing} {...registerProfile('bio')} className={`input mt-1 ${!isEditing ? 'bg-gray-100' : ''}`} />
-                 </div>
-              </div>
+                  </div>
+                </div>
 
-              {isEditing && (
+                {isEditing && (
                 <div className="flex justify-end space-x-3">
                   <button type="button" onClick={handleEditToggle} className="btn-secondary">Cancel</button>
                   <button type="submit" disabled={loading} className="btn-primary"><Save className="h-4 w-4 mr-2" />Save</button>
-                </div>
-              )}
-            </form>
+                  </div>
+                )}
+              </form>
           )}
 
           {activeTab === 'resume' && (
@@ -158,8 +158,8 @@ const Profile = () => {
                       <FileText className="h-5 w-5 text-gray-400" />
                       <span className="text-sm text-gray-500">No resume uploaded</span>
                     </div>
-                  )}
-                </div>
+                      )}
+                    </div>
 
                 <div className="border-t pt-4">
                   <h4 className="text-md font-medium text-gray-900 mb-4">Upload New Resume</h4>
@@ -179,17 +179,17 @@ const Profile = () => {
                         Accepted formats: PDF, DOC, DOCX (max 5MB)
                       </p>
                     </div>
-                    
-                    <button
+
+                      <button
                       type="submit"
                       disabled={!resumeFile || uploadingResume}
                       className="btn-primary flex items-center"
-                    >
+                      >
                       <Upload className="h-4 w-4 mr-2" />
                       {uploadingResume ? 'Uploading...' : 'Upload Resume'}
-                    </button>
-                  </form>
-                </div>
+                      </button>
+                </form>
+              </div>
 
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                   <h5 className="text-sm font-medium text-blue-900 mb-2">Why upload a resume?</h5>
@@ -209,11 +209,11 @@ const Profile = () => {
                 <input type="password" {...registerPassword('currentPassword', { required: 'Current password is required' })} className="input mt-1" />
                 {passwordErrors.currentPassword && <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword.message}</p>}
               </div>
-              <div>
+                    <div>
                 <label className="block text-sm font-medium text-gray-700">New Password</label>
                 <input type="password" {...registerPassword('newPassword', { required: 'New password is required', minLength: { value: 8, message: 'Must be at least 8 characters' } })} className="input mt-1" />
                 {passwordErrors.newPassword && <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword.message}</p>}
-              </div>
+                    </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
                 <input type="password" {...registerPassword('confirmPassword', { required: 'Please confirm password', validate: value => value === newPassword || 'Passwords do not match' })} className="input mt-1" />

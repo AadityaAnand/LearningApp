@@ -2,9 +2,9 @@ import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import {
+import { 
   Target,
-  BookOpen,
+  BookOpen, 
   Zap,
   Award,
   Users,
@@ -49,21 +49,21 @@ const Header = () => {
       </Link>
       <div className="flex items-center space-x-4">
         <ThemeSwitcher />
-        {user ? (
+              {user ? (
           <Link to="/dashboard" className="btn-primary">
             Go to Dashboard
-          </Link>
-        ) : (
-          <>
+                  </Link>
+              ) : (
+                <>
             <Link to="/login" className="font-semibold text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">
               Log In
-            </Link>
+                  </Link>
             <Link to="/register" className="btn-primary">
-              Get Started
-            </Link>
-          </>
-        )}
-      </div>
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
     </header>
   );
 };
@@ -124,7 +124,7 @@ const HeroSection = () => {
         >
           <Link to="/register" className="btn-primary text-lg px-8 py-4">
             Start Your Journey Free
-          </Link>
+                </Link>
         </motion.div>
       </div>
       <div className="absolute inset-0 z-0 opacity-10 dark:opacity-20">
@@ -147,7 +147,7 @@ const FeaturesSection = ({ scrollYProgress }) => {
         <h2 className="text-4xl font-bold text-center mb-2 text-gray-800 dark:text-white">How It Works</h2>
         <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-16 max-w-2xl mx-auto">
           A simple, powerful, and personalized process to accelerate your career growth.
-        </p>
+            </p>
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard
             icon={<Users className="w-12 h-12 text-primary-500" />}
@@ -175,7 +175,7 @@ const FeatureCard = ({ icon, title, description }) => (
     <div className="mb-6">{icon}</div>
     <h3 className="text-2xl font-bold mb-3 text-gray-800 dark:text-white">{title}</h3>
     <p className="text-gray-600 dark:text-gray-300">{description}</p>
-  </div>
+          </div>
 );
 
 const TechStackSection = () => (
@@ -189,7 +189,7 @@ const TechStackSection = () => (
         <TechIcon icon={<BarChart className="w-10 h-10" />} name="Progress Tracking" />
         <TechIcon icon={<Globe className="w-10 h-10" />} name="Web-Based" />
       </div>
-    </div>
+          </div>
   </section>
 );
 
@@ -197,7 +197,7 @@ const TechIcon = ({ icon, name }) => (
   <div className="flex flex-col items-center gap-2 text-gray-600 dark:text-gray-300">
     {icon}
     <span className="text-sm font-medium">{name}</span>
-  </div>
+                </div>
 );
 
 const TestimonialSection = () => (
@@ -221,7 +221,7 @@ const TestimonialSection = () => (
           role="Data Analyst"
         />
       </div>
-    </div>
+          </div>
   </section>
 );
 
@@ -229,13 +229,13 @@ const TestimonialCard = ({ quote, name, role }) => (
   <div className="p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg space-y-4">
     <div className="flex items-center">
       {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />)}
-    </div>
+                  </div>
     <p className="text-gray-700 dark:text-gray-300 italic">"{quote}"</p>
     <div>
       <p className="font-bold text-gray-800 dark:text-white">{name}</p>
       <p className="text-sm text-gray-500 dark:text-gray-400">{role}</p>
-    </div>
-  </div>
+                </div>
+              </div>
 );
 
 const CTASection = () => (
@@ -247,8 +247,8 @@ const CTASection = () => (
       </p>
       <Link to="/register" className="btn-light text-lg px-8 py-4">
         Get Started - It's Free
-      </Link>
-    </div>
+            </Link>
+          </div>
   </section>
 );
 
@@ -258,6 +258,6 @@ const Footer = () => (
       <p>&copy; {new Date().getFullYear()} CareerCraft AI. All rights reserved.</p>
     </div>
   </footer>
-);
+  );
 
 export default Landing; 

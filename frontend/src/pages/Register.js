@@ -105,39 +105,39 @@ const Register = () => {
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   First name
                 </label>
-                <input
-                  id="firstName"
+                  <input
+                    id="firstName"
                   name="firstName"
-                  type="text"
+                    type="text"
                   required
                   value={formData.firstName}
                   onChange={handleChange}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="First name"
+                    placeholder="First name"
                 />
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Last name
                 </label>
-                <input
-                  id="lastName"
+                  <input
+                    id="lastName"
                   name="lastName"
-                  type="text"
+                    type="text"
                   required
                   value={formData.lastName}
                   onChange={handleChange}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Last name"
+                    placeholder="Last name"
                 />
               </div>
             </div>
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email address
               </label>
-              <input
+                <input
                 id="email"
                 name="email"
                 type="email"
@@ -147,8 +147,8 @@ const Register = () => {
                 onChange={handleChange}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your email"
-              />
-            </div>
+                />
+              </div>
             
             <div>
               <label htmlFor="careerGoal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -165,12 +165,12 @@ const Register = () => {
                 placeholder="Describe your career goals (e.g., 'I want to become a Senior Software Engineer')"
               />
             </div>
-            
+
             <div>
               <label htmlFor="resume" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Resume (Optional)
               </label>
-              <input
+                <input
                 id="resume"
                 name="resume"
                 type="file"
@@ -182,39 +182,39 @@ const Register = () => {
                 Upload your resume to get a more personalized learning plan. You can also upload it later from your profile.
               </p>
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
-              <input
-                id="password"
+                <input
+                  id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
+                  autoComplete="new-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Create a password"
+                  placeholder="Create a password"
               />
             </div>
-            
+
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Confirm Password
               </label>
-              <input
-                id="confirmPassword"
+                <input
+                  id="confirmPassword"
                 name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
+                  type="password"
+                  autoComplete="new-password"
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm your password"
-              />
+                  placeholder="Confirm your password"
+                />
             </div>
           </div>
 
