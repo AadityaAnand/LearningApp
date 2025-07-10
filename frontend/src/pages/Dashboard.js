@@ -44,7 +44,7 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get("/api/learning-plans/current", {
+        const res = await axios.get("/learning-plans/current", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPlan(res.data.learningPlan);

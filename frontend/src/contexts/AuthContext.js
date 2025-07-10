@@ -170,6 +170,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    token, // <-- add this line so token is available in context
     login,
     register,
     logout,
